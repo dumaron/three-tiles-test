@@ -1,13 +1,27 @@
-import React, { useMemo, useRef, useState } from 'react';
-import { Shape, Texture, Vector2 } from 'three';
-import { useThree } from 'react-three-fiber';
-import { useGesture } from 'react-use-gesture';
-import { useSpring, animated } from 'react-spring/three';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+	Shape,
+	Texture,
+	Vector2,
+	Geometry,
+	ShapeBufferGeometry,
+	BufferAttribute,
+	Layers,
+	Mesh,
+	MeshBasicMaterial,
+} from 'three';
+// import { useThree, useUpdate } from 'react-three-fiber';
+// import { useGesture } from 'react-use-gesture';
+// import { useSpring, animated } from 'react-spring/three';
+import { useDoubleClick } from '../utils/doubleClickHook';
+import { deselectPath, selectPath } from '../logic/slices/editorSlice';
+import { moveImage } from '../logic/slices/loadedSchemeSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '../logic/rootReducer';
 
 interface RectPropsInterface {
 	x: number;
 	y: number;
-	setActive: () => void;
 	active: string | null;
 	id: string;
 	background: null | Texture;
@@ -19,32 +33,78 @@ export const Rect: React.FC<RectPropsInterface> = ({
 	y,
 	id,
 	active,
-	setActive,
 	background,
 	backgroundWidth,
 }) => {
-	const mesh = useRef();
-	// const randomOffset = useMemo(() => Math.random() * 5, []);
-	const randomOffset = Number(id) || 0;
-	const [spring, set] = useSpring(() => ({
-		position: [0, 0, 1],
-		config: { mass: 1, friction: 60, tension: 800 }
-	}));
-	const { size, viewport } = useThree();
+	const mesh = useRef<Mesh>();
+	const geometry = useRef<ShapeBufferGeometry>();
+	const material = useRef<MeshBasicMaterial>();
+	// const dispatch = useDispatch();
+	// const image = useSelector((state: RootState) => state.loadedScheme.images[id]);
+	// const { x: offsetX, y: offsetY } = image;
+	// const [clipSpring, setClipSpring] = useSpring(() => ({ opacity: 0 }));
+
+	// const [imagePathSpring, setImagePathSpring] = useSpring(() => ({
+	// 	position: [0, 0, 1],
+	// 	opacity: 0,
+	// 	config: { mass: 1, friction: 60, tension: 800 },
+	// }));
+	// const [pathSpring, setPathSpring] = useSpring(() => ({ opacity: 0 }));
+	// const { size, viewport, camera: {zoom} } = useThree();
+
+	const activationCallback = useCallback(() => {
+		// if (!active) {
+		// 	dispatch(selectPath(id));
+		// }
+	}, [active, id]);
+
+	const imagePathDoubleClickHandler = useDoubleClick(activationCallback);
+
+	// const [test, setTest] = useState(0);
+	// const clipDoubleClickHandler = useDoubleClick(() => {
+	// 	dispatch(moveImage({ path: id, x: -2, y: 0 }));
+	// setTest(2);
+	// dispatch(deselectPath());
+	// });
 
 	const path = useMemo(() => {
 		const p = new Shape();
-
 		p.moveTo(x, y);
 		p.lineTo(x + 5, y);
 		p.lineTo(x + 5, y + 5);
 		p.lineTo(x, y + 5);
 		p.closePath();
-
 		return p;
 	}, [x, y]);
 
-	const clip = useMemo(() => {
+	const [offset, setOffset] = useState(0);
+	const [hovered, setHover] = useState(false);
+	const uvs: Float32Array = useMemo<Float32Array>(
+		() =>
+			new Float32Array([
+				offset,
+				offset,
+				offset,
+				5 + offset,
+				5 + offset,
+				5 + offset,
+				5 + offset,
+				offset,
+			]),
+		[offset],
+	);
+
+	// useEffect(() => {
+	// const points = path.getPoints();
+	// console.log(points);
+	// if (geometry.current) {
+	// 	geometry.current.setFromPoints(points);
+	// 	geometry.current.elementsNeedUpdate = true;
+	// }
+
+	// }, [path])
+
+	/*const clip = useMemo(() => {
 		const c = new Shape();
 
 		c.moveTo(-100, -100);
@@ -61,107 +121,102 @@ export const Rect: React.FC<RectPropsInterface> = ({
 	const imagePath = useMemo(() => {
 		const p = new Shape();
 
-		p.moveTo(x - randomOffset, y - randomOffset);
-		p.lineTo(x + backgroundWidth - randomOffset, y - randomOffset);
-		p.lineTo(x + backgroundWidth - randomOffset, y + backgroundWidth - randomOffset);
-		p.lineTo(x - randomOffset, y + backgroundWidth - randomOffset);
+		p.moveTo(x, y);
+		p.lineTo(x + backgroundWidth, y);
+		p.lineTo(x + backgroundWidth, y + backgroundWidth);
+		p.lineTo(x, y + backgroundWidth);
 		p.closePath();
 
 		return p;
 	}, []);
 
-	const geometry = useRef();
-	const [hovered, setHover] = useState(false);
+	
 	const aspect = size.width / viewport.width;
 
 	const bind = useGesture(
 		{
-			onDrag: ({ offset: [x, y] }) =>
-				set({
-					position: [x / aspect, -y / aspect, 1],
-				}),
+			onDrag: (args) => {
+				const {delta, movement } = args;
+				const {
+					offset: [x, y],
+				} = args;
+				if (currentActive) {
+					//console.log(delta, movement);
+					setImagePathSpring({
+						position: [x / (aspect * zoom), -y / (aspect * zoom), 1],
+					});
+				}
+			},
 		},
 		{
 			eventOptions: { pointer: true },
 		},
-	);
+	);*/
 
-	const currentActive = active === id;
+	// const currentActive = active === id;
+	// useEffect(() => {
+	// 	setClipSpring({ opacity: currentActive ? 0.6 : 0 });
+	// 	setPathSpring({ opacity: currentActive ? 0 : 1 });
+	// 	setImagePathSpring({ opacity: currentActive ? 1 : 0 });
+	// }, [currentActive]);
+
+	// useEffect(() => {
+	// 	if (background) {
+	// 		setPathSpring({ opacity: 1 });
+	// 	}
+	// }, [background]);
+
+	// const randomOffset = test;
+	const uvref = useRef<BufferAttribute>();
+	/*useEffect(() => {
+		if (uvref.current) {
+			uvref.current.needsUpdate = true;
+		}
+	}, [offset]);*/
+
+	useEffect(() => {
+		if (background && material.current) {
+			material.current.needsUpdate = true;
+		}
+	}, [background]);
+
+	// const { camera } = useThree();
+	// useEffect(() => {
+		// @ts-ignore
+		// camera.layers.enable(0);
+		// @ts-ignore
+		// mesh.current.layer = 0;
+	// }, []);
 
 	return (
 		<>
-			<animated.mesh
+			<mesh
 				position={[0, 0, 1]}
 				ref={mesh}
-				{...(bind() as any)}
-				onClick={setActive}
+				onClick={
+					imagePathDoubleClickHandler
+					//camera.layers.toggle(0);
+				}
 				onPointerOver={() => setHover(true)}
 				onPointerOut={() => setHover(false)}
 			>
 				<meshBasicMaterial
 					attach="material"
-					map={background || null}
-					color={'white'}
+					map={background}
 					visible={active === null}
 					opacity={hovered ? 0.7 : 1}
-					transparent={true}
+					ref={material}
 				/>
-				<shapeGeometry
-					ref={geometry}
-					attach="geometry"
-					args={[path]}
-					faceVertexUvs={[
-						[
-							[
-								new Vector2(randomOffset, 5 + randomOffset),
-								new Vector2(randomOffset, randomOffset),
-								new Vector2(5 + randomOffset, randomOffset),
-							],
-							[
-								new Vector2(5 + randomOffset, randomOffset),
-								new Vector2(5 + randomOffset, 5 + randomOffset),
-								new Vector2(randomOffset, 5 + randomOffset),
-							],
-						],
-					]}
-				/>
-			</animated.mesh>
-
-			{currentActive && (
-				<>
-					<mesh position={[0, 0, 1]}>
-						{/* NOTA BENE: se non si mette transparent=true non funziona*/}
-						<meshBasicMaterial
-							attach="material"
-							color={'black'}
-							opacity={0.6}
-							transparent={true}
-						/>
-						<shapeGeometry attach="geometry" args={[clip]} />
-					</mesh>
-					<animated.mesh position={spring.position} {...(bind() as any)}>
-						<meshBasicMaterial attach="material" map={background || null} />
-						<shapeGeometry
-							attach="geometry"
-							args={[imagePath]}
-							faceVertexUvs={[
-								[
-									[
-										new Vector2(0, backgroundWidth),
-										new Vector2(0, 0),
-										new Vector2(backgroundWidth, 0),
-									],
-									[
-										new Vector2(backgroundWidth, -0),
-										new Vector2(backgroundWidth, backgroundWidth),
-										new Vector2(0, backgroundWidth),
-									],
-								],
-							]}
-						/>
-					</animated.mesh>
-				</>
-			)}
+				<shapeBufferGeometry ref={geometry} attach="geometry" args={[path]}>
+					<bufferAttribute
+						attachObject={['attributes', 'uv']}
+						count={4}
+						array={uvs}
+						itemSize={2}
+						ref={uvref}
+					/>
+				</shapeBufferGeometry>
+			</mesh>
 		</>
 	);
 };

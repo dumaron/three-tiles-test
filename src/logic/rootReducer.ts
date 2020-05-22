@@ -1,8 +1,10 @@
 import { combineReducers } from '@reduxjs/toolkit';
-import { schemeEditorSlice } from './slices/editor';
+import { loadedSchemeSlice } from './slices/loadedSchemeSlice';
+import { editorSlice } from './slices/editorSlice';
 
 export const rootReducer = combineReducers({
-	editor: schemeEditorSlice.reducer,
+	loadedScheme: loadedSchemeSlice.reducer,
+	editor: editorSlice.reducer,
 });
 
 export type RootState = ReturnType<typeof rootReducer>;

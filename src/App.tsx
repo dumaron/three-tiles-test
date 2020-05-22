@@ -1,56 +1,38 @@
-import React, { useEffect, useState } from 'react';
-import './App.css';
+import React from 'react';
 import { Canvas } from 'react-three-fiber';
-import { Rect } from './components/Rect';
-import { Texture, TextureLoader } from 'three';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { RootState } from './logic/rootReducer';
-import { actions } from './logic/slices/editor';
+import { Provider } from 'react-redux';
+import { store } from './logic/store';
+import { MapControls } from 'drei';
+import { Editor } from './components/Editor';
+import {Mesh} from 'three';
 
 export const App: React.FC = () => {
-	const dispatch = useDispatch();
-	const { scheme, selectedPath } = useSelector((state: RootState) => state.editor);
-
-	const [background, setBackground] = useState<Texture | null>(null);
-
-	useEffect(() => {
-		const loader = new TextureLoader();
-		const imageSize = 10;
-		loader.load('panel1.jpeg', (image) => {
-			image.repeat.set(1 / imageSize, 1 / imageSize);
-			setBackground(image);
-		});
-	}, []);
-
+	const { selectedPath } = useSelector((state: RootState) => state.editor);
+	
 	return (
 		<div className="App">
 			<Canvas
+				orthographic
+				invalidateFrameloop={true}
 				camera={{
-					fov: 30,
 					position: [0, 0, 40],
+					up: [0, 0, 1],
+					zoom: 10,
 					near: 1,
 					far: 20000,
 				}}
 			>
-				<ambientLight />
-				{Object.entries(scheme.paths).map(([id, [x, y]]) => (
-					<Rect
-						key={id}
-						x={x}
-						y={y}
-						id={id}
-						active={selectedPath}
-						background={background}
-						setActive={() =>
-							dispatch(
-								selectedPath === null
-									? actions.selectPath(id)
-									: actions.deselectPath(),
-							)
-						}
-						backgroundWidth={10}
+				<Provider store={store}>
+					<MapControls
+						enableDamping={false}
+						enableRotate={false}
+						enablePan={selectedPath === null}
 					/>
-				))}
+					<ambientLight />
+					<Editor />
+				</Provider>
 			</Canvas>
 		</div>
 	);
