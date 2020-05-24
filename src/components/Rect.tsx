@@ -18,6 +18,7 @@ import { deselectPath, selectPath } from '../logic/slices/editorSlice';
 import { moveImage } from '../logic/slices/loadedSchemeSlice';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../logic/rootReducer';
+import {useThree} from "react-three-fiber";
 
 interface RectPropsInterface {
 	x: number;
@@ -39,7 +40,7 @@ export const Rect: React.FC<RectPropsInterface> = ({
 	const mesh = useRef<Mesh>();
 	const geometry = useRef<ShapeBufferGeometry>();
 	const material = useRef<MeshBasicMaterial>();
-	// const dispatch = useDispatch();
+	const dispatch = useDispatch();
 	// const image = useSelector((state: RootState) => state.loadedScheme.images[id]);
 	// const { x: offsetX, y: offsetY } = image;
 	// const [clipSpring, setClipSpring] = useSpring(() => ({ opacity: 0 }));
@@ -53,9 +54,9 @@ export const Rect: React.FC<RectPropsInterface> = ({
 	// const { size, viewport, camera: {zoom} } = useThree();
 
 	const activationCallback = useCallback(() => {
-		// if (!active) {
-		// 	dispatch(selectPath(id));
-		// }
+		if (!active) {
+			dispatch(selectPath(id));
+		}
 	}, [active, id]);
 
 	const imagePathDoubleClickHandler = useDoubleClick(activationCallback);
@@ -159,14 +160,8 @@ export const Rect: React.FC<RectPropsInterface> = ({
 	// 	setPathSpring({ opacity: currentActive ? 0 : 1 });
 	// 	setImagePathSpring({ opacity: currentActive ? 1 : 0 });
 	// }, [currentActive]);
-
-	// useEffect(() => {
-	// 	if (background) {
-	// 		setPathSpring({ opacity: 1 });
-	// 	}
-	// }, [background]);
-
-	// const randomOffset = test;
+	
+	
 	const uvref = useRef<BufferAttribute>();
 	/*useEffect(() => {
 		if (uvref.current) {
@@ -174,19 +169,12 @@ export const Rect: React.FC<RectPropsInterface> = ({
 		}
 	}, [offset]);*/
 
+	// quando viene caricato il background aggiorno il materiale
 	useEffect(() => {
 		if (background && material.current) {
 			material.current.needsUpdate = true;
 		}
 	}, [background]);
-
-	// const { camera } = useThree();
-	// useEffect(() => {
-		// @ts-ignore
-		// camera.layers.enable(0);
-		// @ts-ignore
-		// mesh.current.layer = 0;
-	// }, []);
 
 	return (
 		<>
@@ -195,10 +183,11 @@ export const Rect: React.FC<RectPropsInterface> = ({
 				ref={mesh}
 				onClick={
 					imagePathDoubleClickHandler
-					//camera.layers.toggle(0);
+					// () => camera.layers.toggle(0)
 				}
 				onPointerOver={() => setHover(true)}
 				onPointerOut={() => setHover(false)}
+				layers={[0]}
 			>
 				<meshBasicMaterial
 					attach="material"
