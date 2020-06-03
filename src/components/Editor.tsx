@@ -1,8 +1,18 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Rect } from './Rect';
+import { Path } from './Path';
 import { useSelector } from 'react-redux';
 import { RootState } from '../logic/rootReducer';
-import {Box3, Geometry, Group, Mesh, Path, Shape, ShapeBufferGeometry, Sphere, Texture, TextureLoader} from 'three';
+import {
+	Box3,
+	Geometry,
+	Group,
+	Mesh,
+	Shape,
+	ShapeBufferGeometry,
+	Sphere,
+	Texture,
+	TextureLoader,
+} from 'three';
 import { useThree } from 'react-three-fiber';
 
 export const Editor: React.FC = () => {
@@ -17,8 +27,8 @@ export const Editor: React.FC = () => {
 	const selectedPathOutline = useMemo<Shape>(() => {
 		const c = new Shape();
 		const p = new Shape();
-		
-		if (selectedPath) {
+
+		/*if (selectedPath) {
 			const [x, y] = scheme.paths[selectedPath];
 			
 			p.moveTo(x, y);
@@ -33,8 +43,8 @@ export const Editor: React.FC = () => {
 			c.closePath();
 			c.holes = [p];
 			console.log(p.getPoints());
-		}
-		
+		}*/
+
 		return c;
 	}, [selectedPath]);
 
@@ -49,7 +59,7 @@ export const Editor: React.FC = () => {
 	// carico lo sfondo e lo setto come stato interno
 	useEffect(() => {
 		const loader = new TextureLoader();
-		const imageSize = 10;
+		const imageSize = 100;
 		neededImages.forEach((image) => {
 			loader.load(image, (texture) => {
 				texture.repeat.set(1 / imageSize, 1 / imageSize);
@@ -81,13 +91,12 @@ export const Editor: React.FC = () => {
 	return (
 		<>
 			<group position={center as [number, number, number]} ref={groupRef}>
-				{Object.entries(scheme.paths).map(([id, [x, y]]) => {
+				{Object.entries(scheme.paths).map(([id, definition]) => {
 					const background = backgrounds[images[id]?.image];
 					return (
-						<Rect
+						<Path
 							key={id}
-							x={x}
-							y={y}
+							d={definition}
 							id={id}
 							active={selectedPath}
 							background={background}
@@ -96,7 +105,7 @@ export const Editor: React.FC = () => {
 					);
 				})}
 			</group>
-			<mesh position={[0, 0, 1]}  >
+			<mesh position={[0, 0, 1]}>
 				{/* NOTA BENE: se non si mette transparent=true non funziona*/}
 				<meshBasicMaterial
 					attach="material"
@@ -104,10 +113,12 @@ export const Editor: React.FC = () => {
 					opacity={0.6}
 					transparent={true}
 				/>
-				<shapeBufferGeometry attach="geometry" args={[selectedPathOutline]} ref={outlineMesh}>
-					<bufferAttribute
-					
-					/>
+				<shapeBufferGeometry
+					attach="geometry"
+					args={[selectedPathOutline]}
+					ref={outlineMesh}
+				>
+					<bufferAttribute />
 				</shapeBufferGeometry>
 			</mesh>
 		</>

@@ -8,7 +8,7 @@ export const useDoubleClick = (callback: () => void) => {
 	return (e: PointerEvent) => {
 		const timerIsRunning = timeout.current;
 		if (timerIsRunning) {
-			console.log(e.object.uuid, ref.current?.uuid);
+			// console.log(e.object.uuid, ref.current?.uuid);
 			if (e.object === ref.current) {
 				callback();
 			}

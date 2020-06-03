@@ -1,5 +1,6 @@
 import { ImageAssociationInterface, SchemeInterface } from '../../types/schema';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import {svg} from '../../svg'
 
 export interface SchemeEditorState {
 	scheme: SchemeInterface;
@@ -8,26 +9,8 @@ export interface SchemeEditorState {
 	};
 }
 
-const size = 5;
-let c = 0,
-	x,
-	y;
-const paths: { [key: string]: [number, number] } = {};
 
-for (x = 0; x < size; x++) {
-	for (y = 0; y < size; y++) {
-		paths['p' + c++] = [x * 6, y * 6];
-	}
-}
-new Array(size).fill(null).forEach((_, i) => {
-	const x = 6 * i;
-	new Array(size).fill(null).forEach((_, i) => [x, 6 * i]);
-});
-
-const basicScheme: SchemeInterface = {
-	paths
-};
-const basicAssociations = Object.keys(basicScheme.paths).reduce<{
+const basicAssociations = Object.keys(svg.paths).reduce<{
 	[key: string]: ImageAssociationInterface;
 }>((tot, key) => {
 	tot[key] = {
@@ -40,7 +23,7 @@ const basicAssociations = Object.keys(basicScheme.paths).reduce<{
 }, {});
 
 const initialState: SchemeEditorState = {
-	scheme: basicScheme,
+	scheme: svg,
 	images: basicAssociations,
 };
 
