@@ -1,12 +1,12 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Path } from './Path';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../logic/rootReducer';
 import {
 	Box3,
-	Geometry,
+	// Geometry,
 	Group,
-	Mesh,
+	// Mesh,
 	Shape,
 	ShapeBufferGeometry,
 	Sphere,
@@ -14,8 +14,11 @@ import {
 	TextureLoader,
 } from 'three';
 import { useThree } from 'react-three-fiber';
+import { parseSvgPath } from '../utils/svg';
+import { deselectPath } from '../logic/slices/editorSlice';
 
 export const Editor: React.FC = () => {
+	const dispatch = useDispatch();
 	const { camera } = useThree();
 	const groupRef = useRef<Group>();
 	const outlineMesh = useRef<ShapeBufferGeometry>();
@@ -24,26 +27,31 @@ export const Editor: React.FC = () => {
 	const [center, setCenter] = useState([0, 0, 0]);
 	const [backgrounds, setBackgrounds] = useState<{ [key: string]: Texture }>({});
 
+	// allineo al centro
+	useEffect(() => {
+		camera.layers.enable(0);
+		camera.layers.enable(1);
+		if (groupRef.current) {
+			const box = new Box3().setFromObject(groupRef.current);
+			const sphere = new Sphere();
+			box.getBoundingSphere(sphere);
+			setCenter([-sphere.center.x, -sphere.center.y, 0]);
+		}
+	}, []);
+
 	const selectedPathOutline = useMemo<Shape>(() => {
 		const c = new Shape();
-		const p = new Shape();
+		c.moveTo(-1000, -1000);
+		c.lineTo(-1000, 1000);
+		c.lineTo(1000, 1000);
+		c.lineTo(1000, -1000);
+		c.closePath();
 
-		/*if (selectedPath) {
-			const [x, y] = scheme.paths[selectedPath];
-			
-			p.moveTo(x, y);
-			p.lineTo(x + 5, y);
-			p.lineTo(x + 5, y + 5);
-			p.lineTo(x, y + 5);
-			p.closePath();
-			c.moveTo(-100, -100);
-			c.lineTo(-100, 100);
-			c.lineTo(100, 100);
-			c.lineTo(100, -100);
-			c.closePath();
-			c.holes = [p];
-			console.log(p.getPoints());
-		}*/
+		if (selectedPath) {
+			const d = scheme.paths[selectedPath];
+			const shape = parseSvgPath(d);
+			c.holes = [shape];
+		}
 
 		return c;
 	}, [selectedPath]);
@@ -70,26 +78,43 @@ export const Editor: React.FC = () => {
 		});
 	}, [check]);
 
-	// allineo al centro
-	useEffect(() => {
-		if (groupRef.current) {
-			const box = new Box3().setFromObject(groupRef.current);
-			const sphere = new Sphere();
-			box.getBoundingSphere(sphere);
-			setCenter([-sphere.center.x, -sphere.center.y, 0]);
-		}
-	}, []);
-
 	useEffect(() => {
 		if (selectedPath) {
 			camera.layers.toggle(0); // nascondo il layer dei materiali assegnati
-			// outlineMesh.current && (outlineMesh.current.material.needsUpdate = true);
-			console.log(outlineMesh.current?.attributes.position);
+
+			const handleEsc = (event: any) => {
+				if (event.keyCode === 27) {
+					dispatch(deselectPath());
+				}
+			};
+			window.addEventListener('keydown', handleEsc);
+
+			return () => window.removeEventListener('keydown', handleEsc);
+		} else {
+			camera.layers.enable(0);
+			return () => {};
 		}
+
+		
 	}, [selectedPath]);
 
 	return (
 		<>
+			<mesh position={center as [number, number, number]} layers={[1]} renderOrder={1}>
+				{/* NOTA BENE: se non si mette transparent=true non funziona*/}
+				<meshBasicMaterial
+					attach="material"
+					color={'black'}
+					opacity={0.6}
+					transparent={true}
+					visible={!!selectedPath}
+				/>
+				<shapeBufferGeometry
+					attach="geometry"
+					args={[selectedPathOutline]}
+					ref={outlineMesh}
+				/>
+			</mesh>
 			<group position={center as [number, number, number]} ref={groupRef}>
 				{Object.entries(scheme.paths).map(([id, definition]) => {
 					const background = backgrounds[images[id]?.image];
@@ -100,27 +125,11 @@ export const Editor: React.FC = () => {
 							id={id}
 							active={selectedPath}
 							background={background}
-							backgroundWidth={10}
+							backgroundWidth={100}
 						/>
 					);
 				})}
 			</group>
-			<mesh position={[0, 0, 1]}>
-				{/* NOTA BENE: se non si mette transparent=true non funziona*/}
-				<meshBasicMaterial
-					attach="material"
-					color={'black'}
-					opacity={0.6}
-					transparent={true}
-				/>
-				<shapeBufferGeometry
-					attach="geometry"
-					args={[selectedPathOutline]}
-					ref={outlineMesh}
-				>
-					<bufferAttribute />
-				</shapeBufferGeometry>
-			</mesh>
 		</>
 	);
 };

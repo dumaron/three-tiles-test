@@ -1,3 +1,6 @@
+export const tmp = 'tmp';
+
+/*
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
 	Shape,
@@ -105,10 +108,11 @@ export const Rect: React.FC<RectPropsInterface> = ({
 
 	// }, [path])
 
-	/*const clip = useMemo(() => {
+	/!*const clip = useMemo(() => {
 		const c = new Shape();
 
 		c.moveTo(-100, -100);
+		c.lineTo(-100, 100);
 		c.lineTo(-100, 100);
 		c.lineTo(100, 100);
 		c.lineTo(100, -100);
@@ -152,7 +156,7 @@ export const Rect: React.FC<RectPropsInterface> = ({
 		{
 			eventOptions: { pointer: true },
 		},
-	);*/
+	);*!/
 
 	// const currentActive = active === id;
 	// useEffect(() => {
@@ -163,11 +167,11 @@ export const Rect: React.FC<RectPropsInterface> = ({
 	
 	
 	const uvref = useRef<BufferAttribute>();
-	/*useEffect(() => {
+	/!*useEffect(() => {
 		if (uvref.current) {
 			uvref.current.needsUpdate = true;
 		}
-	}, [offset]);*/
+	}, [offset]);*!/
 
 	// quando viene caricato il background aggiorno il materiale
 	useEffect(() => {
@@ -209,3 +213,4 @@ export const Rect: React.FC<RectPropsInterface> = ({
 		</>
 	);
 };
+*/

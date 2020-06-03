@@ -6,11 +6,10 @@ import { Provider } from 'react-redux';
 import { store } from './logic/store';
 import { MapControls } from 'drei';
 import { Editor } from './components/Editor';
-import {Mesh} from 'three';
 
 export const App: React.FC = () => {
 	const { selectedPath } = useSelector((state: RootState) => state.editor);
-	
+
 	return (
 		<div className="App">
 			<Canvas
@@ -25,11 +24,7 @@ export const App: React.FC = () => {
 				}}
 			>
 				<Provider store={store}>
-					<MapControls
-						enableDamping={false}
-						enableRotate={false}
-						enablePan={selectedPath === null}
-					/>
+					<MapControls enableDamping={false} enableRotate={false} />
 					<ambientLight />
 					<Editor />
 				</Provider>

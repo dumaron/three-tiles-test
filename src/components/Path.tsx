@@ -2,7 +2,10 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Shape, Texture, ShapeBufferGeometry, Mesh, MeshBasicMaterial } from 'three';
 import { parseSvgPath } from '../utils/svg';
 import { PathDefinition } from '../types/schema';
-import { moveUVTo } from '../utils/uv';
+import { moveUVTo } from '../utils/bufferAttribute';
+import { useDoubleClick } from '../utils/doubleClickHook';
+import { useDispatch } from 'react-redux';
+import { selectPath } from '../logic/slices/editorSlice';
 
 interface PathPropsInterface {
 	d: PathDefinition;
@@ -24,6 +27,8 @@ export const Path: React.FC<PathPropsInterface> = ({
 	const mesh = useRef<Mesh>();
 	const geometry = useRef<ShapeBufferGeometry>();
 	const material = useRef<MeshBasicMaterial>();
+	const dispatch = useDispatch();
+	const dblClickHandler = useDoubleClick(() => dispatch(selectPath(id)));
 
 	// traduco dalle definizioni (ristrette) del path svg una Shape threejs
 	const shape = useMemo<Shape>(() => parseSvgPath(d), [d]);
@@ -54,16 +59,16 @@ export const Path: React.FC<PathPropsInterface> = ({
 
 			// l'if sottostante e' fasullo, serve solo a far stare tranqillo typescript: in questo punto
 			// geometry.current e' sempre valorizzato correttamente
-			if (geometry.current) {
-				const { boundingBox } = geometry.current;
-				if (boundingBox)
+			if (geometry.current && shapeCenter) {
+				const x = shapeCenter.x - backgroundWidth / 2;
+				const y = shapeCenter.y - backgroundWidth / 2;
+				// @ts-ignore
+				moveUVTo(
+					x,
+					y,
 					// @ts-ignore
-					moveUVTo(
-						boundingBox.min.x,
-						boundingBox.min.y,
-						// @ts-ignore
-						geometry.current.attributes.uv.array,
-					);
+					geometry.current.attributes.uv.array,
+				);
 				// @ts-ignore
 				geometry.current.attributes.uv.needsUpdate = true;
 			}
@@ -78,11 +83,11 @@ export const Path: React.FC<PathPropsInterface> = ({
 				onPointerOver={() => setHover(true)}
 				onPointerOut={() => setHover(false)}
 				layers={[0]}
+				onClick={dblClickHandler}
 			>
 				<meshBasicMaterial
 					attach="material"
 					map={background}
-					visible={active === null}
 					opacity={hovered ? 0.7 : 1}
 					ref={material}
 				/>
