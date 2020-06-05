@@ -2,10 +2,11 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Shape, Texture, ShapeBufferGeometry, Mesh, MeshBasicMaterial } from 'three';
 import { parseSvgPath } from '../utils/svg';
 import { PathDefinition } from '../types/schema';
-import { moveUVTo } from '../utils/bufferAttribute';
+import { moveUVTo, rotateUVonPlanarBufferGeometry2 } from '../utils/bufferAttribute';
 import { useDoubleClick } from '../utils/doubleClickHook';
 import { useDispatch } from 'react-redux';
 import { selectPath } from '../logic/slices/editorSlice';
+import { useThree } from 'react-three-fiber';
 
 interface PathPropsInterface {
 	d: PathDefinition;
@@ -15,8 +16,6 @@ interface PathPropsInterface {
 	backgroundWidth: number;
 }
 
-// const ()
-
 export const Path: React.FC<PathPropsInterface> = ({
 	d,
 	id,
@@ -24,11 +23,12 @@ export const Path: React.FC<PathPropsInterface> = ({
 	background,
 	backgroundWidth,
 }) => {
+	const { invalidate } = useThree();
 	const mesh = useRef<Mesh>();
 	const geometry = useRef<ShapeBufferGeometry>();
 	const material = useRef<MeshBasicMaterial>();
 	const dispatch = useDispatch();
-	const dblClickHandler = useDoubleClick(() => dispatch(selectPath(id)));
+	// const dblClickHandler = useDoubleClick(() => dispatch(selectPath(id)));
 
 	// traduco dalle definizioni (ristrette) del path svg una Shape threejs
 	const shape = useMemo<Shape>(() => parseSvgPath(d), [d]);
@@ -83,7 +83,12 @@ export const Path: React.FC<PathPropsInterface> = ({
 				onPointerOver={() => setHover(true)}
 				onPointerOut={() => setHover(false)}
 				layers={[0]}
-				onClick={dblClickHandler}
+				// onClick={dblClickHandler}
+				onClick={() => {
+					// @ts-ignore
+					rotateUVonPlanarBufferGeometry2(1, geometry.current?.attributes.uv as any, background?.matrix);
+					invalidate();
+				}}
 			>
 				<meshBasicMaterial
 					attach="material"
