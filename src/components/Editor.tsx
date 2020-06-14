@@ -5,10 +5,12 @@ import { RootState } from '../logic/rootReducer';
 import {
 	Box3,
 	// Geometry,
-	Group,
+	Group, Mesh,
+	MeshBasicMaterial,
 	// Mesh,
 	Shape,
 	ShapeBufferGeometry,
+	ShapeGeometry,
 	Sphere,
 	Texture,
 	TextureLoader,
@@ -16,21 +18,33 @@ import {
 import { useThree } from 'react-three-fiber';
 import { parseSvgPath } from '../utils/svg';
 import { deselectPath } from '../logic/slices/editorSlice';
+import { get2dCenter } from '../utils/three';
+
+const imageSize = 200;
 
 export const Editor: React.FC = () => {
 	const dispatch = useDispatch();
 	const { camera } = useThree();
 	const groupRef = useRef<Group>();
+	const imageRef = useRef<Mesh>();
 	const outlineMesh = useRef<ShapeBufferGeometry>();
 	const { scheme, images } = useSelector((state: RootState) => state.loadedScheme);
 	const { selectedPath } = useSelector((state: RootState) => state.editor);
 	const [center, setCenter] = useState([0, 0, 0]);
 	const [backgrounds, setBackgrounds] = useState<{ [key: string]: Texture }>({});
+	const imageMaterialRef = useRef<MeshBasicMaterial>();
 
-	// allineo al centro
+	const selectedPathBackground = useMemo(
+		() => (selectedPath ? backgrounds[images[selectedPath]?.image] : null),
+		[selectedPath],
+	);
+
+	// const selectedImageShape = useMe
+
+	// allineo al centro lo schema di posa
 	useEffect(() => {
 		camera.layers.enable(0);
-		camera.layers.enable(1);
+		camera.layers.disable(1);
 		if (groupRef.current) {
 			const box = new Box3().setFromObject(groupRef.current);
 			const sphere = new Sphere();
@@ -38,6 +52,22 @@ export const Editor: React.FC = () => {
 			setCenter([-sphere.center.x, -sphere.center.y, 0]);
 		}
 	}, []);
+
+	const parsedSelectedPath = useMemo<Shape | null>(() => {
+		if (!selectedPath) {
+			return null;
+		}
+		const d = scheme.paths[selectedPath];
+		return parseSvgPath(d);
+	}, [selectedPath]);
+
+	const selectedPathCenter = useMemo(() => {
+		if (!parsedSelectedPath) {
+			return null;
+		}
+		const tmp = new ShapeGeometry(parsedSelectedPath);
+		return get2dCenter(tmp);
+	}, [parsedSelectedPath]);
 
 	const selectedPathOutline = useMemo<Shape>(() => {
 		const c = new Shape();
@@ -47,13 +77,21 @@ export const Editor: React.FC = () => {
 		c.lineTo(1000, -1000);
 		c.closePath();
 
-		if (selectedPath) {
-			const d = scheme.paths[selectedPath];
-			const shape = parseSvgPath(d);
-			c.holes = [shape];
+		if (parsedSelectedPath) {
+			c.holes = [parsedSelectedPath];
 		}
 
 		return c;
+	}, [parsedSelectedPath]);
+
+	const selectedPathImagePosition = useMemo<{
+		x: number;
+		y: number;
+		rotation: number;
+	}>(() => {
+		const x = center[0] + (selectedPathCenter?.x || 0);
+		const y = center[1] + (selectedPathCenter?.y || 0);
+		return { x, y, rotation: 0 };
 	}, [selectedPath]);
 
 	const neededImages = Object.values(images).reduce<string[]>((tot, association) => {
@@ -67,7 +105,6 @@ export const Editor: React.FC = () => {
 	// carico lo sfondo e lo setto come stato interno
 	useEffect(() => {
 		const loader = new TextureLoader();
-		const imageSize = 100;
 		neededImages.forEach((image) => {
 			loader.load(image, (texture) => {
 				texture.repeat.set(1 / imageSize, 1 / imageSize);
@@ -79,8 +116,17 @@ export const Editor: React.FC = () => {
 	}, [check]);
 
 	useEffect(() => {
+		
 		if (selectedPath) {
-			camera.layers.toggle(0); // nascondo il layer dei materiali assegnati
+			camera.layers.enable(1);
+			camera.layers.disable(0); // nascondo il layer dei materiali assegnati
+			if (imageMaterialRef.current !== undefined) {
+				// @ts-ignore
+				imageMaterialRef.current.needsUpdate = true;
+				// TODO move in react-three-fiber and handle updates accordingly
+				// @ts-ignore
+				imageRef.current.geometry.attributes.uv.array = new Float32Array([0, imageSize, imageSize, imageSize, 0, 0, imageSize, 0])
+			}
 
 			const handleEsc = (event: any) => {
 				if (event.keyCode === 27) {
@@ -91,6 +137,7 @@ export const Editor: React.FC = () => {
 
 			return () => window.removeEventListener('keydown', handleEsc);
 		} else {
+			camera.layers.disable(1);
 			camera.layers.enable(0);
 			return () => {};
 		}
@@ -98,22 +145,40 @@ export const Editor: React.FC = () => {
 		
 	}, [selectedPath]);
 
+
 	return (
 		<>
-			<mesh position={center as [number, number, number]} layers={[1]} renderOrder={1}>
+			<mesh
+				position={center as [number, number, number]}
+				layers={[1]}
+				renderOrder={1}
+				visible={!!selectedPath}
+			>
 				{/* NOTA BENE: se non si mette transparent=true non funziona*/}
 				<meshBasicMaterial
 					attach="material"
 					color={'black'}
-					opacity={0.6}
+					opacity={0.9}
 					transparent={true}
-					visible={!!selectedPath}
 				/>
 				<shapeBufferGeometry
 					attach="geometry"
 					args={[selectedPathOutline]}
 					ref={outlineMesh}
 				/>
+			</mesh>
+			<mesh
+				position={[selectedPathImagePosition.x, selectedPathImagePosition.y, 0]}
+				layers={[1]}
+				ref={imageRef}
+			>
+				<meshBasicMaterial
+					attach="material"
+					map={selectedPathBackground}
+					ref={imageMaterialRef}
+					visible={!!selectedPath}
+				/>
+				<planeBufferGeometry attach="geometry" args={[imageSize, imageSize]} />
 			</mesh>
 			<group position={center as [number, number, number]} ref={groupRef}>
 				{Object.entries(scheme.paths).map(([id, definition]) => {
@@ -125,7 +190,7 @@ export const Editor: React.FC = () => {
 							id={id}
 							active={selectedPath}
 							background={background}
-							backgroundWidth={100}
+							backgroundWidth={imageSize}
 						/>
 					);
 				})}

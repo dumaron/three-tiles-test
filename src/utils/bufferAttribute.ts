@@ -87,7 +87,7 @@ export function rotateUVonPlanarBufferGeometry2(
 	}
 	const degreeInRad = MathUtils.degToRad(rotateInDeg);
 	const matrix = textureBaseMatrix.clone();
-	matrix.setUvTransform(0, 0, 1, 1, degreeInRad, 0, 0)
+	matrix.setUvTransform(0, 0, 1, 1, degreeInRad, 50, 50)
 	
 	let i, tmp;
 	for (i=0; i<uvs.array.length; i+= 2) {
@@ -98,6 +98,7 @@ export function rotateUVonPlanarBufferGeometry2(
 		uvs.array[i + 1] = tmp.y;
 	}
 	
-
+	// uvs.applyMatrix3(matrix);
+	
 	uvs.needsUpdate = true;
 }

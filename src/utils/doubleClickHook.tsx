@@ -1,11 +1,11 @@
 import { useRef } from 'react';
-import { PointerEvent } from 'react-three-fiber';
+import { MouseEvent } from 'react-three-fiber';
 
 export const useDoubleClick = (callback: () => void) => {
 	const ref = useRef<any>(null);
 	const timeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-	return (e: PointerEvent) => {
+	return (e: MouseEvent) => {
 		const timerIsRunning = timeout.current;
 		if (timerIsRunning) {
 			// console.log(e.object.uuid, ref.current?.uuid);
