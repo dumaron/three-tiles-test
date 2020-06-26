@@ -5,7 +5,8 @@ import { RootState } from '../logic/rootReducer';
 import {
 	Box3,
 	// Geometry,
-	Group, Mesh,
+	Group,
+	Mesh,
 	MeshBasicMaterial,
 	// Mesh,
 	Shape,
@@ -19,12 +20,16 @@ import { useThree } from 'react-three-fiber';
 import { parseSvgPath } from '../utils/svg';
 import { deselectPath } from '../logic/slices/editorSlice';
 import { get2dCenter } from '../utils/three';
+import { useGesture } from 'react-use-gesture';
+import { animated } from '@react-spring/three';
+import { useSpring } from '@react-spring/core';
 
 const imageSize = 200;
 
 export const Editor: React.FC = () => {
 	const dispatch = useDispatch();
-	const { camera } = useThree();
+	const { camera, size, viewport, raycaster } = useThree();
+	const aspect = size.width / viewport.width;
 	const groupRef = useRef<Group>();
 	const imageRef = useRef<Mesh>();
 	const outlineMesh = useRef<ShapeBufferGeometry>();
@@ -33,18 +38,20 @@ export const Editor: React.FC = () => {
 	const [center, setCenter] = useState([0, 0, 0]);
 	const [backgrounds, setBackgrounds] = useState<{ [key: string]: Texture }>({});
 	const imageMaterialRef = useRef<MeshBasicMaterial>();
+	const initialCoords = useRef<[number, number, 0]>([0, 0, 0]);
 
 	const selectedPathBackground = useMemo(
 		() => (selectedPath ? backgrounds[images[selectedPath]?.image] : null),
 		[selectedPath],
 	);
 
-	// const selectedImageShape = useMe
-
 	// allineo al centro lo schema di posa
 	useEffect(() => {
 		camera.layers.enable(0);
 		camera.layers.disable(1);
+		raycaster.layers.enable(0);
+		raycaster.layers.disable(1);
+
 		if (groupRef.current) {
 			const box = new Box3().setFromObject(groupRef.current);
 			const sphere = new Sphere();
@@ -71,10 +78,10 @@ export const Editor: React.FC = () => {
 
 	const selectedPathOutline = useMemo<Shape>(() => {
 		const c = new Shape();
-		c.moveTo(-1000, -1000);
-		c.lineTo(-1000, 1000);
-		c.lineTo(1000, 1000);
-		c.lineTo(1000, -1000);
+		c.moveTo(-100000, -100000);
+		c.lineTo(-100000, 100000);
+		c.lineTo(100000, 100000);
+		c.lineTo(100000, -100000);
 		c.closePath();
 
 		if (parsedSelectedPath) {
@@ -84,15 +91,36 @@ export const Editor: React.FC = () => {
 		return c;
 	}, [parsedSelectedPath]);
 
-	const selectedPathImagePosition = useMemo<{
-		x: number;
-		y: number;
-		rotation: number;
-	}>(() => {
-		const x = center[0] + (selectedPathCenter?.x || 0);
-		const y = center[1] + (selectedPathCenter?.y || 0);
-		return { x, y, rotation: 0 };
-	}, [selectedPath]);
+	const [spring, setSpring] = useSpring(() => ({
+		to: {
+			position: [0, 0, 0],
+		},
+	}));
+
+	const bind = useGesture(
+		{
+			onDragStart: () => {
+				console.log(camera);
+			},
+			onDrag: (e) => {
+				// console.log(e.offset);
+				// console.log(aspect);
+				// console.log(initialCoords.current);
+				e.event?.nativeEvent.stopPropagation();
+				e.event?.nativeEvent.preventDefault();
+				setSpring({
+					to: {
+						position: [
+							initialCoords.current[0] + (e.offset[0] / camera.zoom),
+							initialCoords.current[1] - (e.offset[1] / camera.zoom),
+							0,
+						],
+					},
+				});
+			},
+		},
+		{ eventOptions: { pointer: true } },
+	);
 
 	const neededImages = Object.values(images).reduce<string[]>((tot, association) => {
 		if (!tot.includes(association.image)) {
@@ -116,17 +144,33 @@ export const Editor: React.FC = () => {
 	}, [check]);
 
 	useEffect(() => {
-		
 		if (selectedPath) {
+			camera.layers.disable(0);
 			camera.layers.enable(1);
-			camera.layers.disable(0); // nascondo il layer dei materiali assegnati
+			raycaster.layers.disable(0);
+			raycaster.layers.enable(1);
+
 			if (imageMaterialRef.current !== undefined) {
 				// @ts-ignore
 				imageMaterialRef.current.needsUpdate = true;
 				// TODO move in react-three-fiber and handle updates accordingly
 				// @ts-ignore
-				imageRef.current.geometry.attributes.uv.array = new Float32Array([0, imageSize, imageSize, imageSize, 0, 0, imageSize, 0])
+				imageRef.current.geometry.attributes.uv.array = new Float32Array([
+					0,
+					imageSize,
+					imageSize,
+					imageSize,
+					0,
+					0,
+					imageSize,
+					0,
+				]);
 			}
+
+			const x = center[0] + (selectedPathCenter?.x || 0);
+			const y = center[1] + (selectedPathCenter?.y || 0);
+			initialCoords.current = [x, y, 0];
+			setSpring({ to: { position: [x, y, 0] }, immediate: true });
 
 			const handleEsc = (event: any) => {
 				if (event.keyCode === 27) {
@@ -137,14 +181,13 @@ export const Editor: React.FC = () => {
 
 			return () => window.removeEventListener('keydown', handleEsc);
 		} else {
-			camera.layers.disable(1);
 			camera.layers.enable(0);
+			camera.layers.disable(1);
+			raycaster.layers.enable(0);
+			raycaster.layers.disable(1);
 			return () => {};
 		}
-
-		
 	}, [selectedPath]);
-
 
 	return (
 		<>
@@ -154,11 +197,11 @@ export const Editor: React.FC = () => {
 				renderOrder={1}
 				visible={!!selectedPath}
 			>
-				{/* NOTA BENE: se non si mette transparent=true non funziona*/}
+				NOTA BENE: se non si mette transparent=true non funziona
 				<meshBasicMaterial
 					attach="material"
 					color={'black'}
-					opacity={0.9}
+					opacity={0.777}
 					transparent={true}
 				/>
 				<shapeBufferGeometry
@@ -167,8 +210,9 @@ export const Editor: React.FC = () => {
 					ref={outlineMesh}
 				/>
 			</mesh>
-			<mesh
-				position={[selectedPathImagePosition.x, selectedPathImagePosition.y, 0]}
+			<animated.mesh
+				{...bind()}
+				position={spring.position as any}
 				layers={[1]}
 				ref={imageRef}
 			>
@@ -179,7 +223,7 @@ export const Editor: React.FC = () => {
 					visible={!!selectedPath}
 				/>
 				<planeBufferGeometry attach="geometry" args={[imageSize, imageSize]} />
-			</mesh>
+			</animated.mesh>
 			<group position={center as [number, number, number]} ref={groupRef}>
 				{Object.entries(scheme.paths).map(([id, definition]) => {
 					const background = backgrounds[images[id]?.image];
@@ -198,3 +242,6 @@ export const Editor: React.FC = () => {
 		</>
 	);
 };
+
+// @ts-ignore
+Editor.whyDidYouRender = true;

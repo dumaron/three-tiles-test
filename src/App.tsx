@@ -1,15 +1,11 @@
 import React from 'react';
 import { Canvas } from 'react-three-fiber';
-import { useSelector } from 'react-redux';
-import { RootState } from './logic/rootReducer';
 import { Provider } from 'react-redux';
 import { store } from './logic/store';
 import { MapControls } from 'drei';
 import { Editor } from './components/Editor';
 
 export const App: React.FC = () => {
-	const { selectedPath } = useSelector((state: RootState) => state.editor);
-
 	return (
 		<div className="App">
 			<Canvas
@@ -24,7 +20,7 @@ export const App: React.FC = () => {
 				}}
 			>
 				<Provider store={store}>
-					<MapControls enableDamping={false} enableRotate={false} />
+					<MapControls enableDamping={false} enableRotate={false}/>
 					<ambientLight />
 					<Editor />
 				</Provider>

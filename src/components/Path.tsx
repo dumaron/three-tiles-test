@@ -101,3 +101,6 @@ export const Path: React.FC<PathPropsInterface> = ({
 		</>
 	);
 };
+
+// @ts-ignore
+Path.whyDidYouRender = true
