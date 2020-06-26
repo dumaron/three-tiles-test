@@ -7,10 +7,7 @@ export const parseSvgPath = (definition: PathDefinition): Shape => {
 	let lastY: number = 0;
 
 	definition.forEach((block) => {
-		const bs = [0, ...(block.slice(1) as number[])].map(n => n);
-		// console.log(1, '------------------------------')
-		// console.log(2, block.slice(1).join(' '));
-		// console.log(3, bs.join(' '));
+		const bs = [0, ...(block.slice(1) as number[])].map((n) => n);
 		switch (block[0]) {
 			case 'M':
 				p.moveTo(bs[1], bs[2]);
@@ -39,7 +36,7 @@ export const parseSvgPath = (definition: PathDefinition): Shape => {
 				break;
 		}
 	});
-	
+
 	return p;
 };
 /*

@@ -6,7 +6,6 @@ import { moveUVTo } from '../utils/bufferAttribute';
 import { useDoubleClick } from '../utils/doubleClickHook';
 import { useDispatch } from 'react-redux';
 import { selectPath } from '../logic/slices/editorSlice';
-import { useThree } from 'react-three-fiber';
 
 interface PathPropsInterface {
 	d: PathDefinition;
@@ -16,14 +15,13 @@ interface PathPropsInterface {
 	backgroundWidth: number;
 }
 
-export const Path: React.FC<PathPropsInterface> = ({
+export const Path: React.FC<PathPropsInterface> = React.memo(({
 	d,
 	id,
 	active,
 	background,
 	backgroundWidth,
 }) => {
-	const { invalidate } = useThree();
 	const mesh = useRef<Mesh>();
 	const geometry = useRef<ShapeBufferGeometry>();
 	const material = useRef<MeshBasicMaterial>();
@@ -100,7 +98,7 @@ export const Path: React.FC<PathPropsInterface> = ({
 			</mesh>
 		</>
 	);
-};
+});
 
 // @ts-ignore
 Path.whyDidYouRender = true
