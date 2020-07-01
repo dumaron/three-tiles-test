@@ -1,6 +1,12 @@
 import { SchemeInterface } from './types/schema';
 
 export const svg: SchemeInterface = {
+	viewBox: [
+		0.17645114697247444,
+		137.25047395730914,
+		500.17645114697245,
+		700.2470659784449,
+	],
 	paths: {
 		'3027': [
 			['M', 465.63109897654846, 627.5404485069414],

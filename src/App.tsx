@@ -14,7 +14,7 @@ export const App: React.FC = () => {
 				camera={{
 					position: [0, 0, 40],
 					up: [0, 0, 1],
-					zoom: 10,
+					zoom: 1,
 					near: 1,
 					far: 20000,
 				}}

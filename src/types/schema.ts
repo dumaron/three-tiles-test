@@ -9,6 +9,7 @@ export type AbsolutePathDefinition =
 export type PathDefinition = ReadonlyArray<AbsolutePathDefinition>
 
 export interface SchemeInterface {
+	viewBox: [number, number, number, number];
 	paths: { [id: string]: PathDefinition };
 }
 
