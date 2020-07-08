@@ -12,15 +12,15 @@ export const App: React.FC = () => {
 				orthographic
 				invalidateFrameloop={true}
 				camera={{
-					position: [0, 0, 40],
+					position: [0, 0, 2],
 					up: [0, 0, 1],
 					zoom: 1,
-					near: 1,
+					near: .1,
 					far: 20000,
 				}}
 			>
 				<Provider store={store}>
-					<MapControls enableDamping={false} enableRotate={false}/>
+					<MapControls enableDamping={false} enableRotate={false} />
 					<ambientLight />
 					<Editor />
 				</Provider>

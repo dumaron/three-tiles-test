@@ -35,7 +35,6 @@ export const Editor: React.FC = () => {
 	);
 
 	const viewBox = useMemo<Plane[]>(() => {
-		console.log(center);
 		return [
 			new Plane(new Vector3(0, 1, 0), -scheme.viewBox[1] - center[1]),
 			new Plane(
@@ -47,9 +46,6 @@ export const Editor: React.FC = () => {
 				new Vector3(-1, 0, 0),
 				scheme.viewBox[0] + scheme.viewBox[2] + center[0],
 			),
-			// new Plane(new Vector3(0, -1, 0), 370),
-			// new Plane(new Vector3(0, 1, 0), 320),
-			// new Plane(new Vector3(1, 0, 0), scheme.viewBox[2])
 		];
 	}, [scheme.viewBox, center]);
 
@@ -122,6 +118,7 @@ export const Editor: React.FC = () => {
 			return () => {};
 		}
 	}, [selectedPath]);
+	
 
 	return (
 		<>

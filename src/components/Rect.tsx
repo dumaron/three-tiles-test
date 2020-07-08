@@ -120,7 +120,8 @@ export const Rect: React.FC<RectPropsInterface> = ({
 
 		c.holes = [path];
 
-		return c;
+		return c;					console.log(e.movement, e.xy, e.offset, e.delta);
+
 	}, [path]);
 
 	const imagePath = useMemo(() => {

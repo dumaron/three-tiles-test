@@ -24,12 +24,14 @@ export const PathOverlay: React.FC<PathOverlayProps> = React.memo(
 		}, [pathShape]);
 
 		return (
-			<mesh position={center} layers={[1]} renderOrder={1}>
+			<mesh position={center} layers={[1]} renderOrder={999} onBeforeRender={(renderer) => {
+			}}>
 				<meshBasicMaterial
 					attach="material"
 					color={'black'}
 					opacity={0.777}
 					transparent={true}
+					depthTest={false}
 				/>
 				<shapeBufferGeometry attach="geometry" args={[selectedPathOutline]} />
 			</mesh>
