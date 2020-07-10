@@ -1,30 +1,24 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Path } from './Path';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../logic/rootReducer';
 import {
-	Box3,
 	Color,
-	Group,
-	Plane,
 	Shape,
-	Sphere,
 	Texture,
 	TextureLoader,
-	Vector3,
 } from 'three';
 import { useThree } from 'react-three-fiber';
 import { parseSvgPath } from '../utils/svg';
 import { deselectPath } from '../logic/slices/editorSlice';
 import { PathOverlay } from './PathOverlay';
 import { FreeModeImage } from './FreeModeImage';
+import { PoseScheme } from './PoseScheme';
 
 const imageSize = 200;
 
 export const Editor: React.FC = () => {
 	const dispatch = useDispatch();
 	const { camera, raycaster, gl, scene } = useThree();
-	const groupRef = useRef<Group>();
 	const { scheme, images } = useSelector((state: RootState) => state.loadedScheme);
 	const { selectedPath } = useSelector((state: RootState) => state.editor);
 	const [center, setCenter] = useState<[number, number, 0]>([0, 0, 0]);
@@ -34,21 +28,6 @@ export const Editor: React.FC = () => {
 		[selectedPath],
 	);
 
-	const viewBox = useMemo<Plane[]>(() => {
-		return [
-			new Plane(new Vector3(0, 1, 0), -scheme.viewBox[1] - center[1]),
-			new Plane(
-				new Vector3(0, -1, 0),
-				scheme.viewBox[1] + scheme.viewBox[3] + center[1],
-			),
-			new Plane(new Vector3(1, 0, 0), -scheme.viewBox[0] - center[0]),
-			new Plane(
-				new Vector3(-1, 0, 0),
-				scheme.viewBox[0] + scheme.viewBox[2] + center[0],
-			),
-		];
-	}, [scheme.viewBox, center]);
-
 	// allineo al centro lo schema di posa
 	useEffect(() => {
 		camera.layers.enable(0);
@@ -57,13 +36,6 @@ export const Editor: React.FC = () => {
 		raycaster.layers.disable(1);
 		gl.localClippingEnabled = true;
 		scene.background = new Color('#ddd');
-
-		if (groupRef.current) {
-			const box = new Box3().setFromObject(groupRef.current);
-			const sphere = new Sphere();
-			box.getBoundingSphere(sphere);
-			setCenter([-sphere.center.x, -sphere.center.y, 0]);
-		}
 	}, []);
 
 	const parsedSelectedPath = useMemo<Shape | null>(() => {
@@ -118,7 +90,6 @@ export const Editor: React.FC = () => {
 			return () => {};
 		}
 	}, [selectedPath]);
-	
 
 	return (
 		<>
@@ -129,22 +100,13 @@ export const Editor: React.FC = () => {
 				materialSize={imageSize}
 				center={center}
 			/>
-			<group position={center} ref={groupRef}>
-				{Object.entries(scheme.paths).map(([id, definition]) => {
-					const background = backgrounds[images[id]?.image];
-					return (
-						<Path
-							key={id}
-							d={definition}
-							id={id}
-							active={selectedPath}
-							background={background}
-							backgroundWidth={imageSize}
-							viewBox={viewBox}
-						/>
-					);
-				})}
-			</group>
+			<gridHelper args={[30, 30, 30]} />
+			<PoseScheme
+				center={center}
+				setCenter={setCenter}
+				imageSize={imageSize}
+				backgrounds={backgrounds}
+			/>
 		</>
 	);
 };

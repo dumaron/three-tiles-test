@@ -6,7 +6,6 @@ import {
 	Shape,
 	ShapeBufferGeometry,
 	Texture,
-	Vector3,
 } from 'three';
 import { parseSvgPath } from '../utils/svg';
 import { PathDefinition } from '../types/schema';
@@ -25,7 +24,7 @@ interface PathPropsInterface {
 }
 
 export const Path: React.FC<PathPropsInterface> = React.memo(
-	({ d, id, active, background, backgroundWidth, viewBox }) => {
+	({ d, id, background, backgroundWidth, viewBox }) => {
 		const mesh = useRef<Mesh>();
 		const geometry = useRef<ShapeBufferGeometry>();
 		const material = useRef<MeshBasicMaterial>();
