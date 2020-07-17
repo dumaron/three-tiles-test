@@ -9,7 +9,7 @@ import {
 } from 'three';
 import { parseSvgPath } from '../utils/svg';
 import { PathDefinition } from '../types/schema';
-import { moveUVTo } from '../utils/bufferAttribute';
+import { moveUVTo, updateUVsFromAssociation } from '../utils/bufferAttribute';
 import { useDoubleClick } from '../utils/doubleClickHook';
 import { useDispatch, useSelector } from 'react-redux';
 import { selectPath } from '../logic/slices/editorSlice';
@@ -84,13 +84,17 @@ export const Path: React.FC<PathPropsInterface> = React.memo(
 						y += imageAssociation.y;
 					}
 
-					// @ts-ignore
-					moveUVTo(
+					updateUVsFromAssociation(
 						x,
 						y,
+						x + 100,
+						y + 100,
+						imageAssociation.rotation,
 						// @ts-ignore
 						geometry.current.attributes.uv.array,
+						background?.matrix,
 					);
+
 					// @ts-ignore
 					geometry.current.attributes.uv.needsUpdate = true;
 				}
@@ -101,10 +105,18 @@ export const Path: React.FC<PathPropsInterface> = React.memo(
 			if (centerUVCoords.current === null) {
 				// sono nel caso in cui non ho ancora inizializzato niente, sto fermo
 			} else {
-				const { x, y } = imageAssociation;
+				const { x, y, rotation } = imageAssociation;
 				if (geometry.current) {
 					const uvs = centerUVCoords.current.slice();
-					moveUVTo(x, y, uvs);
+					updateUVsFromAssociation(
+						x,
+						y,
+						x + 100,
+						y + 100,
+						rotation,
+						uvs,
+						background?.matrix,
+					);
 					// @ts-ignore
 					geometry.current.attributes.uv.array = uvs;
 					// @ts-ignore
@@ -122,11 +134,6 @@ export const Path: React.FC<PathPropsInterface> = React.memo(
 					onPointerOut={() => setHover(false)}
 					layers={[0]}
 					onClick={dblClickHandler}
-					// onClick={() => {
-					// @ts-ignore
-					// rotateUVonPlanarBufferGeometry2(1, geometry.current?.attributes.uv as any, background?.matrix);
-					// invalidate();
-					// }}
 				>
 					<meshBasicMaterial
 						attach="material"

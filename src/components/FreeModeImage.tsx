@@ -6,6 +6,7 @@ import { useThree } from 'react-three-fiber';
 import { get2dCenter } from '../utils/three';
 import { useSelector } from 'react-redux';
 import { RootState } from '../logic/rootReducer';
+import { MathUtils } from 'three';
 
 interface FreeModeImageProps {
 	texture: Texture | null;
@@ -88,7 +89,7 @@ export const FreeModeImage: React.FC<FreeModeImageProps> = React.memo(
 					const diffX = selectedPathCenter.x + center[0]; // center 0 e 1 sono tendenzialmente negativi
 					const diffY = selectedPathCenter.y + center[1];
 					// console.log(selectedPathCenter, center);
-					onMove({ x: x - diffX, y: y - diffY, rotation: (r * 180) / Math.PI });
+					onMove({ x: x - diffX, y: y - diffY, rotation: MathUtils.radToDeg(r) });
 				},
 			},
 			{ eventOptions: { pointer: true } },
@@ -119,7 +120,10 @@ export const FreeModeImage: React.FC<FreeModeImageProps> = React.memo(
 					center[1] + (selectedPathCenter?.y || 0) + (imageAssociation?.y || 0);
 				initialCoords.current = [x, y, 0];
 				setPosition({ position: [x, y, 0], immediate: true });
-				setRotation({ rotation: [0, 0, 0], immediate: true });
+				setRotation({
+					rotation: [0, 0, MathUtils.degToRad(imageAssociation?.rotation || 0)],
+					immediate: true,
+				});
 			}
 		}, [pathShape]);
 

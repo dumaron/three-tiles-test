@@ -40,7 +40,6 @@ export const loadedSchemeSlice = createSlice({
 			action: PayloadAction<{ path: string; x: number; y: number; rotation: number }>,
 		) {
 			const { x, y, rotation, path } = action.payload;
-			console.log(path);
 			const association = state.associations[path];
 			if (association) {
 				association.x = x;
