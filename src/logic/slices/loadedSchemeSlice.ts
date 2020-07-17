@@ -1,14 +1,13 @@
 import { ImageAssociationInterface, SchemeInterface } from '../../types/schema';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import {svg} from '../../svg'
+import { svg } from '../../svg';
 
 export interface SchemeEditorState {
 	scheme: SchemeInterface;
-	images: {
+	associations: {
 		[key: string]: ImageAssociationInterface;
 	};
 }
-
 
 const basicAssociations = Object.keys(svg.paths).reduce<{
 	[key: string]: ImageAssociationInterface;
@@ -19,24 +18,34 @@ const basicAssociations = Object.keys(svg.paths).reduce<{
 		y: 0,
 		rotation: 0,
 	};
+
+	if (key === '3341') {
+		tot[key].x = 100;
+		tot[key].y = 100;
+	}
 	return tot;
 }, {});
 
 const initialState: SchemeEditorState = {
 	scheme: svg,
-	images: basicAssociations,
+	associations: basicAssociations,
 };
 
 export const loadedSchemeSlice = createSlice({
 	name: 'loadedScheme',
 	initialState,
 	reducers: {
-		moveImage(state, action: PayloadAction<{ path: string; x: number; y: number }>) {
-			const { x, y, path } = action.payload;
-			const img = state.images[path];
-			if (img) {
-				img.x = x;
-				img.y = y;
+		moveImage(
+			state,
+			action: PayloadAction<{ path: string; x: number; y: number; rotation: number }>,
+		) {
+			const { x, y, rotation, path } = action.payload;
+			console.log(path);
+			const association = state.associations[path];
+			if (association) {
+				association.x = x;
+				association.y = y;
+				association.rotation = rotation;
 			}
 		},
 	},

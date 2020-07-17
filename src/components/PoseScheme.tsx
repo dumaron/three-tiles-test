@@ -14,7 +14,7 @@ interface PoseSchemeProps {
 export const PoseScheme: React.FC<PoseSchemeProps> = React.memo(
 	({ center, setCenter, imageSize, backgrounds }) => {
 		const groupRef = useRef<Group>();
-		const { scheme, images } = useSelector((state: RootState) => state.loadedScheme);
+		const { scheme, associations } = useSelector((state: RootState) => state.loadedScheme);
 		const { selectedPath } = useSelector((state: RootState) => state.editor);
 		const viewBox = useMemo<Plane[]>(() => {
 			return [
@@ -43,7 +43,7 @@ export const PoseScheme: React.FC<PoseSchemeProps> = React.memo(
 		return (
 			<group position={center} ref={groupRef}>
 				{Object.entries(scheme.paths).map(([id, definition]) => {
-					const background = backgrounds[images[id]?.image];
+					const background = backgrounds[associations[id]?.image];
 					return (
 						<Path
 							key={id}

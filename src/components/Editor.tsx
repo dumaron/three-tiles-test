@@ -1,32 +1,39 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../logic/rootReducer';
-import {
-	Color,
-	Shape,
-	Texture,
-	TextureLoader,
-} from 'three';
+import { Color, Shape, Texture, TextureLoader } from 'three';
 import { useThree } from 'react-three-fiber';
 import { parseSvgPath } from '../utils/svg';
 import { deselectPath } from '../logic/slices/editorSlice';
+import { moveImage } from '../logic/slices/loadedSchemeSlice';
 import { PathOverlay } from './PathOverlay';
 import { FreeModeImage } from './FreeModeImage';
 import { PoseScheme } from './PoseScheme';
+import { Grid } from './Grid';
+import { TemporaryMovementData } from '../types/editor';
 
 const imageSize = 200;
 
 export const Editor: React.FC = () => {
 	const dispatch = useDispatch();
+	const temporaryMovementData = useRef<TemporaryMovementData>({
+		x: 0,
+		y: 0,
+		rotation: 0,
+	});
 	const { camera, raycaster, gl, scene } = useThree();
-	const { scheme, images } = useSelector((state: RootState) => state.loadedScheme);
+	const { scheme, associations } = useSelector((state: RootState) => state.loadedScheme);
 	const { selectedPath } = useSelector((state: RootState) => state.editor);
 	const [center, setCenter] = useState<[number, number, 0]>([0, 0, 0]);
 	const [backgrounds, setBackgrounds] = useState<{ [key: string]: Texture }>({});
 	const selectedPathBackground = useMemo(
-		() => (selectedPath ? backgrounds[images[selectedPath]?.image] : null),
+		() => (selectedPath ? backgrounds[associations[selectedPath]?.image] : null),
 		[selectedPath],
 	);
+
+	const onMove = useCallback((data: TemporaryMovementData) => {
+		temporaryMovementData.current = data;
+	}, []);
 
 	// allineo al centro lo schema di posa
 	useEffect(() => {
@@ -46,12 +53,15 @@ export const Editor: React.FC = () => {
 		return parseSvgPath(d);
 	}, [selectedPath]);
 
-	const neededImages = Object.values(images).reduce<string[]>((tot, association) => {
-		if (!tot.includes(association.image)) {
-			tot.push(association.image);
-		}
-		return tot;
-	}, []);
+	const neededImages = Object.values(associations).reduce<string[]>(
+		(tot, association) => {
+			if (!tot.includes(association.image)) {
+				tot.push(association.image);
+			}
+			return tot;
+		},
+		[],
+	);
 	const check = neededImages.join('');
 
 	// carico lo sfondo e lo setto come stato interno
@@ -76,6 +86,8 @@ export const Editor: React.FC = () => {
 
 			const handleEsc = (event: any) => {
 				if (event.keyCode === 27) {
+					const { x, y, rotation } = temporaryMovementData.current;
+					dispatch(moveImage({ path: selectedPath, x, y, rotation }));
 					dispatch(deselectPath());
 				}
 			};
@@ -99,8 +111,9 @@ export const Editor: React.FC = () => {
 				pathShape={parsedSelectedPath}
 				materialSize={imageSize}
 				center={center}
+				onMove={onMove}
 			/>
-			<gridHelper args={[30, 30, 30]} />
+			{/*<Grid center={center} />*/}
 			<PoseScheme
 				center={center}
 				setCenter={setCenter}

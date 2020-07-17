@@ -4,29 +4,35 @@ import { animated, useSpring } from '@react-spring/three';
 import { useGesture } from 'react-use-gesture';
 import { useThree } from 'react-three-fiber';
 import { get2dCenter } from '../utils/three';
+import { useSelector } from 'react-redux';
+import { RootState } from '../logic/rootReducer';
 
 interface FreeModeImageProps {
 	texture: Texture | null;
 	pathShape: Shape | null;
 	materialSize: number;
 	center: [number, number, 0];
+	onMove: (args: { x: number; y: number; rotation: number }) => void;
 }
 
 export const FreeModeImage: React.FC<FreeModeImageProps> = React.memo(
-	({ texture, materialSize, pathShape, center }) => {
+	({ texture, materialSize, pathShape, center, onMove }) => {
 		const imageRef = useRef<Mesh>();
 		const imageMaterialRef = useRef<MeshBasicMaterial>();
 		const initialAngle = useRef(0);
 		const initialCoords = useRef<[number, number, 0]>([0, 0, 0]);
 		const { camera, raycaster } = useThree();
+		const { selectedPath } = useSelector((state: RootState) => state.editor);
+		const imageAssociation = useSelector((state: RootState) =>
+			selectedPath ? state.loadedScheme.associations[selectedPath] : null,
+		);
 		const rotating = useRef(false);
 
-		const selectedPathCenter = useMemo(() => {
+		const selectedPathCenter = useMemo<{ x: number; y: number }>(() => {
 			if (!pathShape) {
-				return null;
+				return { x: 0, y: 0 };
 			}
-			const tmp = new ShapeGeometry(pathShape);
-			return get2dCenter(tmp);
+			return get2dCenter(new ShapeGeometry(pathShape));
 		}, [pathShape]);
 
 		const [{ position }, setPosition] = useSpring(() => ({
@@ -47,38 +53,42 @@ export const FreeModeImage: React.FC<FreeModeImageProps> = React.memo(
 		const bind = useGesture(
 			{
 				onDragStart: (e) => {
+					initialCoords.current = [position.goal[0], position.goal[1], 0];
 					rotating.current = e.ctrlKey;
 					if (rotating.current) {
 						const center = imageRef.current?.position || { x: 0, y: 0, z: 0 };
 						const p = raycaster.ray.origin;
 						let angle = Math.atan2(-p.x + center.x, p.y - center.y);
 						initialAngle.current = angle - rotation.goal[2];
-					} else {
-						initialCoords.current = [position.goal[0], position.goal[1], 0];
 					}
 				},
 				onDrag: (e) => {
 					e.event?.nativeEvent.stopPropagation();
 					e.event?.nativeEvent.preventDefault();
-					
+
+					let x = initialCoords.current[0];
+					let y = initialCoords.current[1];
+					let r = rotation.goal[2];
+
 					if (rotating.current) {
 						const center = imageRef.current?.position || { x: 0, y: 0, z: 0 };
 						const p = raycaster.ray.origin;
 						let angle = Math.atan2(-p.x + center.x, p.y - center.y);
-
 						setRotation({
 							rotation: [0, 0, angle - initialAngle.current],
 							immediate: true,
 						});
 					} else {
+						x = x + e.movement[0] / camera.zoom;
+						y = y - e.movement[1] / camera.zoom;
 						setPosition({
-							position: [
-								initialCoords.current[0] + e.movement[0] / camera.zoom,
-								initialCoords.current[1] - e.movement[1] / camera.zoom,
-								0,
-							],
+							position: [x, y, 0],
 						});
 					}
+					const diffX = selectedPathCenter.x + center[0]; // center 0 e 1 sono tendenzialmente negativi
+					const diffY = selectedPathCenter.y + center[1];
+					// console.log(selectedPathCenter, center);
+					onMove({ x: x - diffX, y: y - diffY, rotation: (r * 180) / Math.PI });
 				},
 			},
 			{ eventOptions: { pointer: true } },
@@ -103,10 +113,13 @@ export const FreeModeImage: React.FC<FreeModeImageProps> = React.memo(
 					]);
 				}
 
-				const x = center[0] + (selectedPathCenter?.x || 0);
-				const y = center[1] + (selectedPathCenter?.y || 0);
+				const x =
+					center[0] + (selectedPathCenter?.x || 0) + (imageAssociation?.x || 0);
+				const y =
+					center[1] + (selectedPathCenter?.y || 0) + (imageAssociation?.y || 0);
 				initialCoords.current = [x, y, 0];
 				setPosition({ position: [x, y, 0], immediate: true });
+				setRotation({ rotation: [0, 0, 0], immediate: true });
 			}
 		}, [pathShape]);
 
