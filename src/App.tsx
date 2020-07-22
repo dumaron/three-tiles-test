@@ -4,6 +4,7 @@ import { Provider } from 'react-redux';
 import { store } from './logic/store';
 import { MapControls } from 'drei';
 import { Editor } from './components/Editor';
+import { Instructions } from './components/Instructions';
 
 export const App: React.FC = () => {
 	return (
@@ -15,7 +16,7 @@ export const App: React.FC = () => {
 					position: [0, 0, 2],
 					up: [0, 0, 1],
 					zoom: 1,
-					near: .1,
+					near: 0.1,
 					far: 20000,
 				}}
 			>
@@ -25,6 +26,9 @@ export const App: React.FC = () => {
 					<Editor />
 				</Provider>
 			</Canvas>
+			<Provider store={store}>
+				<Instructions />
+			</Provider>
 		</div>
 	);
 };
