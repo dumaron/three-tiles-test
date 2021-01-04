@@ -64,6 +64,7 @@ export const FreeModeImage: React.FC<FreeModeImageProps> = React.memo(
 					}
 				},
 				onDrag: (e) => {
+					console.log(e.event);
 					e.event?.nativeEvent.stopPropagation();
 					e.event?.nativeEvent.preventDefault();
 

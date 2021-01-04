@@ -27,9 +27,9 @@ export const Instructions: React.FC<InstructionsProps> = () => {
 						<span className={'command'}>Double click</span> on a element to enter
 						Move Mode
 					</li>
-					<li>
+					{/*<li>
 						Press <span className={'command'}>Ctrl + z</span> to undo
-					</li>
+					</li>*/}
 				</ul>
 			)}
 			{moveMode && (
@@ -39,7 +39,7 @@ export const Instructions: React.FC<InstructionsProps> = () => {
 						to drag the panel
 					</li>
 					<li>
-						Hold <span className={'command'}>Ctrl</span> and the{' '}
+						Hold <span className={'command'}>Ctrl</span> and{' '}
 						<span className={'command'}>Mouse left button</span> to rotate the panel
 					</li>
 					<li>
@@ -49,6 +49,9 @@ export const Instructions: React.FC<InstructionsProps> = () => {
 					<li>
 						<span className={'command'}>Wheel in/out</span> to increase/decrease the
 						zoom
+					</li>
+					<li>
+						Press <span className={'command'}>esc</span> to return to Move Mode
 					</li>
 				</ul>
 			)}

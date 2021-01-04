@@ -62,12 +62,16 @@ export const Editor: React.FC = () => {
 		},
 		[],
 	);
+	
+	console.log(neededImages);
 	const check = neededImages.join('');
 
 	// carico lo sfondo e lo setto come stato interno
 	useEffect(() => {
+		console.log('test')
 		const loader = new TextureLoader();
 		neededImages.forEach((image) => {
+			console.log('image:', image)
 			loader.load(image, (texture) => {
 				texture.repeat.set(1 / imageSize, 1 / imageSize);
 				setBackgrounds({

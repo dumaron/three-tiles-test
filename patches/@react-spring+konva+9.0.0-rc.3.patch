@@ -1,0 +1,12 @@
+diff --git a/node_modules/@react-spring/konva/package.json b/node_modules/@react-spring/konva/package.json
+index 586de53..18208b7 100644
+--- a/node_modules/@react-spring/konva/package.json
++++ b/node_modules/@react-spring/konva/package.json
+@@ -70,7 +74,6 @@
+   "publishConfig": {
+     "access": "public"
+   },
+-  "sideEffects": false,
+   "types": "index.d.ts",
+   "version": "9.0.0-rc.3"
+ }

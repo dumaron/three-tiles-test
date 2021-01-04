@@ -19,10 +19,11 @@ const basicAssociations = Object.keys(svg.paths).reduce<{
 		rotation: 0,
 	};
 
-	if (key === '3341') {
+	/*if (key === '3341') {
 		tot[key].x = 100;
 		tot[key].y = 100;
-	}
+	}*/
+	
 	return tot;
 }, {});
 
