@@ -1,11 +1,13 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 export interface EditorState {
-	selectedPath: string | null;
+	selectedPath: string | null
+	hoveringFreeImage: boolean
 }
 
 const initialState: EditorState = {
 	selectedPath: null,
+	hoveringFreeImage: false
 };
 
 export const editorSlice = createSlice({
@@ -20,7 +22,10 @@ export const editorSlice = createSlice({
 		deselectPath(state) {
 			state.selectedPath = null;
 		},
+		setHoveringFreeImage(state, action: PayloadAction<boolean>) {
+			state.hoveringFreeImage = action.payload
+		},
 	},
 });
 
-export const { selectPath, deselectPath } = editorSlice.actions;
+export const { selectPath, deselectPath, setHoveringFreeImage } = editorSlice.actions;

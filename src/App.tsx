@@ -2,7 +2,6 @@ import React from 'react';
 import { Canvas } from 'react-three-fiber';
 import { Provider } from 'react-redux';
 import { store } from './logic/store';
-import { MapControls } from 'drei';
 import { Editor } from './components/Editor';
 import { Instructions } from './components/Instructions';
 
@@ -10,6 +9,7 @@ export const App: React.FC = () => {
 	return (
 		<div className="App">
 			<Canvas
+				colorManagement={false}
 				orthographic
 				invalidateFrameloop={true}
 				camera={{
@@ -21,7 +21,6 @@ export const App: React.FC = () => {
 				}}
 			>
 				<Provider store={store}>
-					<MapControls enableDamping={false} enableRotate={false} />
 					<ambientLight />
 					<Editor />
 				</Provider>

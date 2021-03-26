@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { Provider, useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../logic/rootReducer';
 import { Color, Shape, Texture, TextureLoader } from 'three';
 import { useThree } from 'react-three-fiber';
@@ -9,8 +9,8 @@ import { moveImage } from '../logic/slices/loadedSchemeSlice';
 import { PathOverlay } from './PathOverlay';
 import { FreeModeImage } from './FreeModeImage';
 import { PoseScheme } from './PoseScheme';
-import { Grid } from './Grid';
 import { TemporaryMovementData } from '../types/editor';
+import { MapControls } from '@react-three/drei';
 
 const imageSize = 200;
 
@@ -23,7 +23,10 @@ export const Editor: React.FC = () => {
 	});
 	const { camera, raycaster, gl, scene } = useThree();
 	const { scheme, associations } = useSelector((state: RootState) => state.loadedScheme);
-	const { selectedPath } = useSelector((state: RootState) => state.editor);
+	const { selectedPath, hoveringFreeImage } = useSelector(
+		(state: RootState) => state.editor,
+	);
+
 	const [center, setCenter] = useState<[number, number, 0]>([0, 0, 0]);
 	const [backgrounds, setBackgrounds] = useState<{ [key: string]: Texture }>({});
 	const selectedPathBackground = useMemo(
@@ -62,16 +65,14 @@ export const Editor: React.FC = () => {
 		},
 		[],
 	);
-	
-	console.log(neededImages);
+
 	const check = neededImages.join('');
 
 	// carico lo sfondo e lo setto come stato interno
 	useEffect(() => {
-		console.log('test')
 		const loader = new TextureLoader();
 		neededImages.forEach((image) => {
-			console.log('image:', image)
+			console.log('image:', image);
 			loader.load(image, (texture) => {
 				texture.repeat.set(1 / imageSize, 1 / imageSize);
 				setBackgrounds({
@@ -109,6 +110,12 @@ export const Editor: React.FC = () => {
 
 	return (
 		<>
+			{/* @ts-ignore */}
+			<MapControls
+				enableDamping={false}
+				enableRotate={false}
+				enablePan={!hoveringFreeImage}
+			/>
 			<PathOverlay center={center} pathShape={parsedSelectedPath} />
 			<FreeModeImage
 				texture={selectedPathBackground}

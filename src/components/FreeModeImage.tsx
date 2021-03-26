@@ -4,9 +4,11 @@ import { animated, useSpring } from '@react-spring/three';
 import { useGesture } from 'react-use-gesture';
 import { useThree } from 'react-three-fiber';
 import { get2dCenter } from '../utils/three';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../logic/rootReducer';
 import { MathUtils } from 'three';
+import { setHoveringFreeImage } from '../logic/slices/editorSlice';
+
 
 interface FreeModeImageProps {
 	texture: Texture | null;
@@ -18,6 +20,7 @@ interface FreeModeImageProps {
 
 export const FreeModeImage: React.FC<FreeModeImageProps> = React.memo(
 	({ texture, materialSize, pathShape, center, onMove }) => {
+		const dispatch = useDispatch();
 		const imageRef = useRef<Mesh>();
 		const imageMaterialRef = useRef<MeshBasicMaterial>();
 		const initialAngle = useRef(0);
@@ -54,6 +57,12 @@ export const FreeModeImage: React.FC<FreeModeImageProps> = React.memo(
 		const bind = useGesture(
 			{
 				onDragStart: (e) => {
+					// e.event?.stopPropagation?.()
+					// e.event?.preventDefault?.()
+					// @ts-ignore
+					// e.event?.nativeEvent.preventDefault()
+					// @ts-ignore
+					// e.event?.nativeEvent.stopPropagation()
 					initialCoords.current = [position.goal[0], position.goal[1], 0];
 					rotating.current = e.ctrlKey;
 					if (rotating.current) {
@@ -64,9 +73,15 @@ export const FreeModeImage: React.FC<FreeModeImageProps> = React.memo(
 					}
 				},
 				onDrag: (e) => {
-					console.log(e.event);
-					e.event?.nativeEvent.stopPropagation();
-					e.event?.nativeEvent.preventDefault();
+					// console.log(e.event);
+					// e.event?.stopPropagation?.();
+					// e.event?.preventDefault?.();
+					// @ts-ignore
+					// console.log(e.event.nativeEvent)
+					// @ts-ignore
+					// e.event?.nativeEvent.stopPropagation();
+					// @ts-ignore
+					// e.event?.nativeEvent.preventDefault();
 
 					let x = initialCoords.current[0];
 					let y = initialCoords.current[1];
@@ -92,8 +107,7 @@ export const FreeModeImage: React.FC<FreeModeImageProps> = React.memo(
 					// console.log(selectedPathCenter, center);
 					onMove({ x: x - diffX, y: y - diffY, rotation: MathUtils.radToDeg(r) });
 				},
-			},
-			{ eventOptions: { pointer: true } },
+			}
 		);
 
 		useEffect(() => {
@@ -136,6 +150,8 @@ export const FreeModeImage: React.FC<FreeModeImageProps> = React.memo(
 				layers={[1]}
 				ref={imageRef}
 				renderOrder={0}
+				onPointerOver={() => dispatch(setHoveringFreeImage(true))}
+				onPointerOut={() => dispatch(setHoveringFreeImage(false))}
 			>
 				<meshBasicMaterial attach="material" map={texture} ref={imageMaterialRef} />
 				<planeBufferGeometry attach="geometry" args={[materialSize, materialSize]} />

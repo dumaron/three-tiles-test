@@ -10,7 +10,6 @@ import {
 import { parseSvgPath } from '../utils/svg';
 import { PathDefinition } from '../types/schema';
 import { moveUVTo, updateUVsFromAssociation } from '../utils/bufferAttribute';
-import { useDoubleClick } from '../utils/doubleClickHook';
 import { useDispatch, useSelector } from 'react-redux';
 import { selectPath } from '../logic/slices/editorSlice';
 import { RootState } from '../logic/rootReducer';
@@ -34,7 +33,6 @@ export const Path: React.FC<PathPropsInterface> = React.memo(
 		const imageAssociation = useSelector(
 			(state: RootState) => state.loadedScheme.associations[id],
 		);
-		const dblClickHandler = useDoubleClick(() => dispatch(selectPath(id)));
 
 		// traduco dalle definizioni (ristrette) del path svg una Shape threejs
 		const shape = useMemo<Shape>(() => {
@@ -133,7 +131,7 @@ export const Path: React.FC<PathPropsInterface> = React.memo(
 					onPointerOver={() => setHover(true)}
 					onPointerOut={() => setHover(false)}
 					layers={[0]}
-					onClick={dblClickHandler}
+					onDoubleClick={() => dispatch(selectPath(id))}
 				>
 					<meshBasicMaterial
 						attach="material"

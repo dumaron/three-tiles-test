@@ -1,3 +1,5 @@
+export const tmp = 'tmp'
+/*
 import React, { useMemo } from 'react';
 import { Line } from 'drei';
 
@@ -53,3 +55,4 @@ export const Grid: React.FC<GridProps> = React.memo(({ center }) => {
 		</>
 	);
 });
+*/

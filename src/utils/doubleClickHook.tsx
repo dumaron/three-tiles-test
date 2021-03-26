@@ -1,3 +1,5 @@
+export const tmp = 'tmp'
+/*
 import { useRef } from 'react';
 import { MouseEvent } from 'react-three-fiber';
 
@@ -21,3 +23,4 @@ export const useDoubleClick = (callback: () => void) => {
 		ref.current = e.object;
 	};
 };
+*/
